@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace OOP2homework.Interfaces
 {
-    internal interface ISupportsNonFungible
+    public interface ISupportsNonFungible
     {
+        IReadOnlyList<Guid> NonFungibleAssetsOwned { get; } //eth i solana moraju implementirati
+        void AddSupportedNonFungibleAssets(Guid supportedNonFungibleAsset);
+        void AddNonFungibleAssetsOwned(Guid nonFungibleAssetsOwned);
     }
 }

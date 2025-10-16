@@ -1,12 +1,42 @@
-﻿using System;
+﻿using OOP2homework.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OOP2homework.Classes.Wallet.SpecificWallet
+namespace OOP2homework.Classes.Wallets.SpecificWallet
 {
-    internal class SolanaWallet
+    public class SolanaWallet : Wallet, ISupportsNonFungible
     {
+        private static readonly List<Guid> _supportedNonFungibleAssets = new List<Guid>();
+        public static IReadOnlyList<Guid> SupportedNonFungibleAssets => _supportedNonFungibleAssets.AsReadOnly();
+
+        private  readonly List<Guid> _nonFungibleAssetsOwned = new List<Guid>(); 
+        public  IReadOnlyList<Guid> NonFungibleAssetsOwned => _nonFungibleAssetsOwned.AsReadOnly();
+
+        private static readonly List<Guid> _supportedFungibleAssets = new List<Guid>();
+
+        public static IReadOnlyList<Guid> SupportedFungibleAssets => _supportedFungibleAssets.AsReadOnly();
+
+        public SolanaWallet() : base() { } 
+        public void AddSupportedNonFungibleAssets(Guid supportedNonFungibleAsset)
+        {
+            _supportedNonFungibleAssets.Add(supportedNonFungibleAsset);
+        }
+
+        public void AddNonFungibleAssetsOwned(Guid nonFungibleAssetsOwned)
+        {
+            _nonFungibleAssetsOwned.Add(nonFungibleAssetsOwned);
+        }
+
+        public override void AddSupportedFungibleAssets(Guid supportedFungibleAssets)
+        {
+            _supportedFungibleAssets.Add(supportedFungibleAssets);
+        }
+        public override string GetWalletType()
+        {
+            return "SOLANA";
+        }
     }
 }
