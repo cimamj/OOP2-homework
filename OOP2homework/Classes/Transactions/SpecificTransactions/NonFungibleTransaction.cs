@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace OOP2homework.Classes.Transactions.SpecificTransactions
 {
-    internal class NonFungibleTransaction
+    public class NonFungibleTransaction : Transaction
     {
+        public NonFungibleTransaction(Guid nonFungibleAssetAddress, DateTime date, Guid senderWalletAddress, Guid receiverWalletAddress, bool isRevoked) : base(nonFungibleAssetAddress, date, senderWalletAddress, receiverWalletAddress, isRevoked) { } 
     }
 }

@@ -4,9 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OOP2homework.Classes.Wallet.SpecificWallet
+namespace OOP2homework.Classes.Wallets.SpecificWallet
 {
-    internal class BitcoinWallet
+    public class BitcoinWallet : Wallet
     {
+        private static readonly List<Guid> _supportedFungibleAssets = new List<Guid>();
+        public static IReadOnlyList<Guid> SupportedFungibleAssets => _supportedFungibleAssets.AsReadOnly(); //posto nije u konstruktoru net reba get
+        public BitcoinWallet() : base() { }
+
+        public override void AddSupportedFungibleAssets(Guid supportedFungibleAssets)
+        {
+            _supportedFungibleAssets.Add(supportedFungibleAssets);
+        }
+        
+       
     }
 }

@@ -6,7 +6,13 @@ using System.Threading.Tasks;
 
 namespace OOP2homework.Classes.Assets.SpecificAsset
 {
-    internal class NonfungibleAsset
+    public class NonfungibleAsset : Asset
     {
+        public Guid FungibleAssetAddress { get; }
+        public NonfungibleAsset(string name, decimal valueToFungibleAsset, Guid fungibleAssetAddress) : base(name, valueToFungibleAsset) 
+        { 
+            FungibleAssetAddress = fungibleAssetAddress;
+        }
+        
     }
 }
