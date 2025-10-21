@@ -23,5 +23,10 @@ namespace OOP2homework.Classes.Wallets.SpecificWallet
         {
             return "BITCOIN";    
         }
+
+        public override IReadOnlyList<Guid> GetSupportedFungibleAssets()
+        {
+            return SupportedFungibleAssets;
+        }
     }
 }

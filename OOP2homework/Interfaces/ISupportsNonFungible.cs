@@ -9,6 +9,7 @@ namespace OOP2homework.Interfaces
     public interface ISupportsNonFungible
     {
         IReadOnlyList<Guid> NonFungibleAssetsOwned { get; } //eth i solana moraju implementirati
+        IReadOnlyList<Guid> GetSupportedNonFungibleAssets(); //dodano takoder
         void AddSupportedNonFungibleAssets(Guid supportedNonFungibleAsset);
         void AddNonFungibleAssetsOwned(Guid nonFungibleAssetsOwned);
     }

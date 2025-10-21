@@ -6,6 +6,8 @@ using OOP2homework.Classes.Wallets.SpecificWallet;
 using OOP2homework.Classes.Assets.SpecificAsset;
 using OOP2homework.Interfaces;
 using OOP2homework.Classes.Assets;
+using System.ComponentModel.Design;
+using OOP2homework.Classes.Transactions.SpecificTransactions;
 
 List<Wallet> wallets = new List<Wallet>();
 List<FungibleAsset> fungibleAssets = new List<FungibleAsset>();
@@ -185,6 +187,7 @@ void CreateBitcoinWallet()
         newBitcoinWallet.AddSupportedFungibleAssets(btcAsset.Address);
     }
 
+
     decimal amount;
     while (!decimal.TryParse(Console.ReadLine(), out amount) || amount < 0)
     {
@@ -219,12 +222,15 @@ void AccessWallet()
         Console.Write($"Tip: {wallet.GetWalletType()}, Adresa: {wallet.Address}, Ukupna USD vrijednost: {totalUSDValue:F2}$, Postotak promjene {percentageChange:F2}\n"); //je li ovo samo baca - i+
     }
 
-    ChooseWallet();
+
+
+    Menu();
+ 
 
 }
 
 
-void ChooseWallet()
+Wallet ChooseWallet()
 {
     Console.WriteLine("Enter wallet address you want to entry: ");
     string choice = Console.ReadLine()?.Trim();
@@ -232,13 +238,13 @@ void ChooseWallet()
     if(!Guid.TryParse(choice, out Guid selectedAddress))
     {
         Console.WriteLine("Nevažeći format adrese. Molimo unesite ispravan GUID.");
-        return;
+        return null; 
     }
 
     var selectedWallet = wallets.Find(a=>a.Address == selectedAddress);
     if (selectedWallet == null) {
         Console.WriteLine("Wallet s tom adresom nije pronađen.");
-        return;
+        return null;
     }
 
     decimal totalUSDValue = selectedWallet.GetTotalUSDValue(fungibleAssets, nonFungibleAssets);
@@ -260,6 +266,7 @@ void ChooseWallet()
         }
     }
 
+    Console.WriteLine("NonFungible asseti:");
     if (selectedWallet is ISupportsNonFungible nftWallet)
     {
         Console.WriteLine("Non-fungible asseti:");
@@ -286,5 +293,130 @@ void ChooseWallet()
     {
         Console.WriteLine("Ovaj wallet nema asseta.");
     }
+
+    return selectedWallet;
+
+}
+
+
+void Menu()
+{
+    Wallet selectedWallet = null;
+    Console.WriteLine("\nOdaberite opciju:");
+    Console.WriteLine("1. Wallet and asset details");
+    Console.WriteLine("2. Izlaz ");
+    Console.Write("Odaberi opciju: ");
+
+    string izbor = Console.ReadLine();
+
+    switch (izbor)
+    {
+        case "1":
+            selectedWallet = ChooseWallet();
+            if (selectedWallet == null) 
+                break;
+            while(true)
+            {
+
+                Console.WriteLine($"\nTrenutno gledate wallet: {selectedWallet.Address}");
+                Console.WriteLine("1. Transfer asseta");
+                Console.WriteLine("2. Povratak u glavni meni");
+                Console.Write("Odaberi opciju: ");
+                string subChoice = Console.ReadLine();
+                if (subChoice == "1")
+                {
+                    Transfer(selectedWallet);
+                }
+                else
+                    return;
+            }
+
+        //case "2":
+        //    if(selectedWallet == null)
+        //    {
+        //        Console.WriteLine("Prvo odaberite wallet (opcija 1).");
+        //        break;
+        //    }
+        //    Transfer(selectedWallet);
+        //    break;
+        case "2":
+            return;
+        default:
+            Console.WriteLine("Nevažeći unos. Pokušaj ponovo.");
+            break;
+
+    }
+}
+
+void Transfer(Wallet senderWallet)
+{
+    Console.WriteLine("Unesite adresu walleta kojem šaljete asset: ");
+    string walletAddressChoice = Console.ReadLine()?.Trim();
+  
+    if (!Guid.TryParse(walletAddressChoice, out Guid selectedReceiverWalletAddress))
+    {
+        Console.WriteLine("Nevažeći format adrese walleta. Molimo unesite ispravan GUID.");
+        return;
+    }
+    var receiverWallet = wallets.Find(a => a.Address == selectedReceiverWalletAddress);
+    if (receiverWallet == null) 
+    {
+        Console.WriteLine("Wallet primatelja nije pronađen.");
+        return;
+    }
+
+    Console.WriteLine("Unesite adresu asseta kojeg šaljete: ");
+    string assetAddressChoice = Console.ReadLine()?.Trim();
+
+    if (!Guid.TryParse(assetAddressChoice, out Guid selectedAssetAddress))
+    {
+        Console.WriteLine("Nevažeći format adrese asseta. Molimo unesite ispravan GUID.");
+        return;
+    }
+
+
+    var fungibleAsset = fungibleAssets.Find(a => a.Address == selectedAssetAddress);
+    var nonFungibleAsset = nonFungibleAssets.Find(a => a.Address == selectedAssetAddress);
+    decimal amount;
+
+    if (fungibleAsset == null && nonFungibleAsset == null)
+    {
+        Console.WriteLine("Asset nije pronađen.");
+        return;
+    }
+
+    if (fungibleAsset != null)
+    {
+        if(!senderWallet.GetSupportedFungibleAssets().Contains(selectedAssetAddress) || !receiverWallet.GetSupportedFungibleAssets().Contains(selectedAssetAddress))
+        {
+            Console.WriteLine("Sender ili receiver ne podržava ovaj fungible asset.");
+            return;
+        }
+
+        Console.WriteLine($"Unesite količinu {fungibleAsset.Symbol} fungible asseta: ");
+
+        if (!Decimal.TryParse(Console.ReadLine(), out amount) || amount <= 0) //provjera za zero
+        {
+            Console.WriteLine("Nevazeći unos \n");
+        }
+
+        //ima li sender para na ovome racunu
+        if (!senderWallet.FungibleBalances.ContainsKey(selectedAssetAddress) || senderWallet.FungibleBalances[selectedAssetAddress] < amount)
+        {
+            Console.WriteLine("Nemas bele \n");
+            return;
+        }
+
+        var transaction = new FungibleTransaction(selectedAssetAddress, DateTime.Now, senderWallet.Address, receiverWallet.Address, senderWallet, receiverWallet, amount, false);
+        senderWallet.UpdateTransactionsAddresses(transaction.Id);
+        receiverWallet.UpdateTransactionsAddresses(transaction.Id);
+        fungibleAsset.ChangeUSDValue();
+        Console.WriteLine($"Uspješno preneseno {amount} {fungibleAsset.Symbol} na wallet {receiverWallet.Address}.");
+    }
+
+    //else if (nonFungibleAsset != null)
+    //{
+
+    //}
 
 }

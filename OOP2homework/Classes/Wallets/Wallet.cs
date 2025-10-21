@@ -96,5 +96,11 @@ namespace OOP2homework.Classes.Wallets
             _previousAssetUSDValues[assetAddress] = currentUSDValue;
             return percentageChange;
         }
+
+        public abstract IReadOnlyList<Guid> GetSupportedFungibleAssets();
+
+        //public virtual IReadOnlyList<Guid> GetSupportedNonFungibleAssets() => new List<Guid>().AsReadOnly(); ovo je za interface
     }
 }
+
+

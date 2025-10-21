@@ -41,5 +41,14 @@ namespace OOP2homework.Classes.Wallets.SpecificWallet
             return "ETHEREUM";
         }
 
+        public override IReadOnlyList<Guid> GetSupportedFungibleAssets()
+        {
+            return SupportedFungibleAssets;
+        }
+
+        public IReadOnlyList<Guid> GetSupportedNonFungibleAssets()
+        {
+            return SupportedNonFungibleAssets;
+        }
     }
 }
