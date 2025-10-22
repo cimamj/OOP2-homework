@@ -327,7 +327,8 @@ void Menu()
                 Console.WriteLine($"\nTrenutno gledate wallet: {selectedWallet.Address}");
                 Console.WriteLine("1. Transfer asseta");
                 Console.WriteLine("2. Transaction history");
-                Console.WriteLine("3. Povratak u glavni meni");
+                Console.WriteLine("3. Opozovi transakciju");
+                Console.WriteLine("4. Povratak u glavni meni");
                 Console.Write("Odaberi opciju: ");
                 string subChoice = Console.ReadLine();
                 if (subChoice == "1")
@@ -337,6 +338,10 @@ void Menu()
                 else if(subChoice == "2")
                 {
                     TransactionHistory(selectedWallet);
+                }
+                else if(subChoice == "3")
+                {
+                    RevokeTransaction(selectedWallet);
                 }
                 else
                     return;
@@ -505,4 +510,56 @@ void TransactionHistory(Wallet selectedWallet)
         Console.WriteLine($"Is revoked: {transaction.IsRevoked}");
     }
     
+}
+
+
+
+void RevokeTransaction(Wallet selectedWallet)
+{
+    Console.WriteLine("Enter transaction id you want to revoke ");
+
+    if(!Guid.TryParse(Console.ReadLine(), out Guid transactionId))
+      {
+        Console.WriteLine("Nevažeći format adrese. Molimo unesite ispravan GUID.");
+        return;
+      }
+
+    var revokeTransaction = transactions.Find(t=>t.Id ==  transactionId);
+    if (revokeTransaction == null)
+    {
+        Console.WriteLine("Transakcija s navedenim ID-om nije pronađena.");
+        return;
+    }
+    // Provjera je li selectedWallet pošiljatelj
+    if (revokeTransaction.SenderWalletAddress != selectedWallet.Address)
+    {
+        Console.WriteLine("Samo pošiljatelj transakcije može je opozvati.");
+        return;
+    }
+    //var senderWallet = wallets.Find(w => w.Address == revokeTransaction.SenderWalletAddress); selectedWallet je senderWallet
+    var senderWallet = selectedWallet;
+    var receiverWallet = wallets.Find(w => w.Address == revokeTransaction.ReceiverWalletAddress);
+    //if (senderWallet == null || receiverWallet == null)
+    //{
+    //    Console.WriteLine("Wallet pošiljatelja ili primatelja nije pronađen.");
+    //    return;
+    //} nepotrebno ima projvere vec da je null nebi bilo transakcije
+
+ 
+    if (revokeTransaction is FungibleTransaction fungibleTransaction)
+    {
+        //rjesavanje balansa
+        senderWallet.UpdateBalance(fungibleTransaction.AssetAddress, fungibleTransaction.SenderInitialBalance);
+        receiverWallet.UpdateBalance(fungibleTransaction.AssetAddress, fungibleTransaction.ReceiverInitialBalance);
+    }
+    else
+    {
+        if (senderWallet is ISupportsNonFungible nftWallet && receiverWallet is ISupportsNonFungible nftWalletRec)
+        {
+            nftWallet.AddNonFungibleAssetsOwned(revokeTransaction.AssetAddress);
+            nftWalletRec.RemoveNonFungibleAssetsOwned(revokeTransaction.AssetAddress);
+        }
+    }
+    revokeTransaction.Revoke();
+    Console.WriteLine($"Transakcija {revokeTransaction.Id} uspješno opozvana.");
 }

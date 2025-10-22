@@ -26,5 +26,10 @@ namespace OOP2homework.Classes.Transactions
             SenderWalletAddress = senderWalletAddress;
             ReceiverWalletAddress = receiverWalletAddress;
         }
+
+        public void Revoke()
+        {
+            IsRevoked = true;
+        }
     }
 }
