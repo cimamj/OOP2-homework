@@ -50,5 +50,10 @@ namespace OOP2homework.Classes.Wallets.SpecificWallet
         {
             return SupportedNonFungibleAssets;
         }
+
+        public void RemoveNonFungibleAssetsOwned(Guid nonFungibleAssetsOwned)
+        {
+            _nonFungibleAssetsOwned.Remove(nonFungibleAssetsOwned);
+        }
     }
 }

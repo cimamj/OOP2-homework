@@ -12,5 +12,7 @@ namespace OOP2homework.Interfaces
         IReadOnlyList<Guid> GetSupportedNonFungibleAssets(); //dodano takoder
         void AddSupportedNonFungibleAssets(Guid supportedNonFungibleAsset);
         void AddNonFungibleAssetsOwned(Guid nonFungibleAssetsOwned);
+
+        void RemoveNonFungibleAssetsOwned(Guid nonFungibleAssetsOwned);
     }
 }

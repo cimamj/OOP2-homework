@@ -330,15 +330,6 @@ void Menu()
                 else
                     return;
             }
-
-        //case "2":
-        //    if(selectedWallet == null)
-        //    {
-        //        Console.WriteLine("Prvo odaberite wallet (opcija 1).");
-        //        break;
-        //    }
-        //    Transfer(selectedWallet);
-        //    break;
         case "2":
             return;
         default:
@@ -413,10 +404,45 @@ void Transfer(Wallet senderWallet)
         fungibleAsset.ChangeUSDValue();
         Console.WriteLine($"Uspješno preneseno {amount} {fungibleAsset.Symbol} na wallet {receiverWallet.Address}.");
     }
+    //pokazi  sto sve moze ponuditi od asseta za prijenos
+    //nonfungible
+    else
+    {
+        if(!(senderWallet is ISupportsNonFungible senderNFTwallet) || !(receiverWallet is ISupportsNonFungible receiverNFTwallet))
+        {
+            Console.WriteLine("Sender ili receiver ne podržava non-fungible assete.");
+            return;
+        }
 
-    //else if (nonFungibleAsset != null)
-    //{
+        if (!senderNFTwallet.NonFungibleAssetsOwned.Contains(selectedAssetAddress))
+            {
+            Console.WriteLine("Sender ne posjeduje ovaj NFT.");
+            return;
+        }
 
-    //}
+        if (!receiverNFTwallet.GetSupportedNonFungibleAssets().Contains(selectedAssetAddress)) //Suported se podrazumijeva
+        {
+            Console.WriteLine("Receiver ne podržava ovaj NFT.");
+            return;
+        }
+
+        var transaction = new NonFungibleTransaction(selectedAssetAddress, DateTime.Now, senderWallet.Address, receiverWallet.Address, false);
+        receiverNFTwallet.AddNonFungibleAssetsOwned(selectedAssetAddress); //tipa Wallet receiverWallet ne radi nego kad ga castas preko is u NFTwallet, on ima ovu metodu
+        senderNFTwallet.RemoveNonFungibleAssetsOwned(selectedAssetAddress);
+        
+
+        senderWallet.UpdateTransactionsAddresses(transaction.Id);
+        receiverWallet.UpdateTransactionsAddresses(transaction.Id);
+        
+        //senderu makni , recevieru primi, dvi nove metode
+
+        var relatedFungibleAsset = fungibleAssets.Find(a=>a.Address == nonFungibleAsset.FungibleAssetAddress);
+        if (relatedFungibleAsset != null)
+        {
+            relatedFungibleAsset.ChangeUSDValue();
+        }
+
+        Console.WriteLine($"Uspješno prenesen NFT {nonFungibleAsset.Name} na wallet {receiverWallet.Address}.");
+    }
 
 }
