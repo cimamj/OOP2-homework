@@ -1,9 +1,10 @@
-﻿using System;
+﻿using OOP2homework.Classes.Wallets; //bitno
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using OOP2homework.Classes.Wallets; //bitno
+
 
 namespace OOP2homework.Classes.Transactions.SpecificTransactions
 {
@@ -13,8 +14,12 @@ namespace OOP2homework.Classes.Transactions.SpecificTransactions
         public decimal SenderFinalBalance { get; }
         public decimal ReceiverInitialBalance { get; }
         public decimal ReceiverFinalBalance { get; }
+
+        public decimal Amount {  get; } //dodano da mogu vaditii iz svake transakcije koliko se prebacilo, jer balance se non stop minja
         public FungibleTransaction(Guid fungibleAssetAddress, DateTime date, Guid senderWalletAddress, Guid receiverWalletAddress, Wallet senderWallet, Wallet receiverWallet, decimal amountTransferred, bool isRevoked) : base(fungibleAssetAddress, date, senderWalletAddress, receiverWalletAddress, isRevoked)
         {
+
+            Amount = amountTransferred;
             if (senderWallet == null || receiverWallet == null)
             {
                 Console.WriteLine("Sender or receiver wallet cannot be null");

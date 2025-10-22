@@ -8,12 +8,18 @@ using OOP2homework.Interfaces;
 using OOP2homework.Classes.Assets;
 using System.ComponentModel.Design;
 using OOP2homework.Classes.Transactions.SpecificTransactions;
+//using System.Transactions;
+using OOP2homework.Classes.Transactions; //ovo je jebeno bitno, kad je linija povise bila, nisam mogao ukljuciti u Transaction listu transackije specificne tipa Fungible nonfungible
 
 List<Wallet> wallets = new List<Wallet>();
 List<FungibleAsset> fungibleAssets = new List<FungibleAsset>();
 List<NonfungibleAsset> nonFungibleAssets = new List<NonfungibleAsset>();
+List<FungibleTransaction> fungibleTransactions = new List<FungibleTransaction>();
+List<NonFungibleTransaction> nonFungibleTransactions = new List<NonFungibleTransaction>(); //zasto nemogu stvoriti listu transactions u koje cu spremati i jedan i drugi tip mogu li spremmiti u parent listu subove a za wallet radi spremanje subova
+List<Transaction> transactions = new List<Transaction>();
 
-    InitializeFungibleAssets();
+
+InitializeFungibleAssets();
     InitializeNonFungibleAssets();
     InitializeWallets();
 while (true)
@@ -125,7 +131,7 @@ void InitializeWallets()
         wallet.AddSupportedFungibleAssets(usdtAsset.Address);
         wallet.UpdateBalance(btcAsset.Address, (decimal)(rand.NextDouble() * 5)); // 0-5 BTC
         wallet.UpdateBalance(usdtAsset.Address, (decimal)(rand.NextDouble() * 1000)); // 0-1000 USDT
-        wallets.Add(wallet);
+        wallets.Add(wallet);//a ode radi
     }
 
     // Kreiraj 3 Ethereum walleta
@@ -320,12 +326,17 @@ void Menu()
 
                 Console.WriteLine($"\nTrenutno gledate wallet: {selectedWallet.Address}");
                 Console.WriteLine("1. Transfer asseta");
-                Console.WriteLine("2. Povratak u glavni meni");
+                Console.WriteLine("2. Transaction history");
+                Console.WriteLine("3. Povratak u glavni meni");
                 Console.Write("Odaberi opciju: ");
                 string subChoice = Console.ReadLine();
                 if (subChoice == "1")
                 {
                     Transfer(selectedWallet);
+                }
+                else if(subChoice == "2")
+                {
+                    TransactionHistory(selectedWallet);
                 }
                 else
                     return;
@@ -399,6 +410,7 @@ void Transfer(Wallet senderWallet)
         }
 
         var transaction = new FungibleTransaction(selectedAssetAddress, DateTime.Now, senderWallet.Address, receiverWallet.Address, senderWallet, receiverWallet, amount, false);
+        transactions.Add(transaction);
         senderWallet.UpdateTransactionsAddresses(transaction.Id);
         receiverWallet.UpdateTransactionsAddresses(transaction.Id);
         fungibleAsset.ChangeUSDValue();
@@ -427,6 +439,7 @@ void Transfer(Wallet senderWallet)
         }
 
         var transaction = new NonFungibleTransaction(selectedAssetAddress, DateTime.Now, senderWallet.Address, receiverWallet.Address, false);
+        transactions.Add(transaction);
         receiverNFTwallet.AddNonFungibleAssetsOwned(selectedAssetAddress); //tipa Wallet receiverWallet ne radi nego kad ga castas preko is u NFTwallet, on ima ovu metodu
         senderNFTwallet.RemoveNonFungibleAssetsOwned(selectedAssetAddress);
         
@@ -445,4 +458,51 @@ void Transfer(Wallet senderWallet)
         Console.WriteLine($"Uspješno prenesen NFT {nonFungibleAsset.Name} na wallet {receiverWallet.Address}.");
     }
 
+}
+
+
+void TransactionHistory(Wallet selectedWallet)
+{
+    Console.WriteLine($"Sve transakcije {selectedWallet.Address} su sljedece: ");
+
+
+    var showTransactions = transactions
+        .Where(t => t.SenderWalletAddress == selectedWallet.Address || t.ReceiverWalletAddress == selectedWallet.Address)
+        .OrderByDescending(t => t.Date)
+        .ToList();
+
+    if (showTransactions.Count() == 0)
+    {
+        Console.WriteLine("Nema transakcija za ovaj wallet.");
+        return;
+    }
+
+    foreach (var transaction in showTransactions)
+    {
+        Console.WriteLine($"ID: {transaction.Id}");
+        Console.WriteLine($"Datum i vrijeme: {transaction.Date:yyyy-MM-dd HH:mm:ss}");
+        Console.WriteLine($"Pošiljatelj: {transaction.SenderWalletAddress}");
+        Console.WriteLine($"Primatelj: {transaction.ReceiverWalletAddress}");
+        //fungible ili nonfungible, interface ili postojecu listu asseta usporediti s adresama
+
+        Asset asset = fungibleAssets.Find(a => a.Address == transaction.AssetAddress);
+        if (asset != null && asset is FungibleAsset fungibleAsset)
+        {
+            Console.WriteLine($"Asset: {fungibleAsset.Name} ({fungibleAsset.Symbol})");
+
+            //{ Console.WriteLine($"Amount: {selectedWallet.FungibleBalances[fungibleAsset.Address]}"); }  ovaj amount se mijenja
+            if (transaction is FungibleTransaction ft) //mozda ova provjera viska, jer ako je asset fungible, a usporeden je s adresom iz ove transkacije, i ona je fungible
+            {
+                Console.WriteLine($"Amount: {ft.Amount:F8}");
+            }
+
+        }
+        else
+        { 
+        asset = nonFungibleAssets.Find(a => a.Address == transaction.AssetAddress);
+        Console.WriteLine($"Asset: {asset.Name}");
+        }
+        Console.WriteLine($"Is revoked: {transaction.IsRevoked}");
+    }
+    
 }
